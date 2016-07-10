@@ -6,14 +6,18 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RemoteViews;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
 
     private final int NOTIFICATION_ID = 999;
     private NotificationManager notificationManager;
@@ -22,6 +26,12 @@ public class MainActivity extends AppCompatActivity {
     int count = 0;
     Button showNotificationButton;
     Button removeNotificationButton;
+
+    private SensorManager mSensorManager;
+    private Sensor mAccelerometer;
+    private ShakeDetector mShakeDetector;
+
+    Vibrator v;
 
     BroadcastReceiver broadcastReceiverAdd = new BroadcastReceiver() {
         @Override
@@ -63,6 +73,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
+
+        // Shake init
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mShakeDetector = new ShakeDetector();
+        mShakeDetector.setOnShakeListener(new ShakeDetector.OnShakeListener() {
+
+            @Override
+            public void onShake() {
+                if(notificationManager!= null) {
+                    if (notificationManager.getActiveNotifications().length > 0) {
+                        Log.w("flashtea.log", "Shake");
+                        count++;
+                        updateNotification();
+
+                        v.vibrate(300);
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -70,6 +101,14 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         unregisterReceiver(broadcastReceiverAdd);
         unregisterReceiver(broadcastReceiverReset);
+        mSensorManager.unregisterListener(mShakeDetector);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Add the following line to register the Session Manager Listener onResume
+        mSensorManager.registerListener(mShakeDetector, mAccelerometer,	SensorManager.SENSOR_DELAY_UI);
     }
 
     private void startNotification(){
@@ -115,7 +154,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void removeNotification(){
-        notificationManager.cancel(NOTIFICATION_ID);
+        notificationManager.cancelAll();
+        //notificationManager.cancel(NOTIFICATION_ID);
     }
 
     public static class addButtonListener extends BroadcastReceiver {
@@ -140,4 +180,6 @@ public class MainActivity extends AppCompatActivity {
         // updated.
         notificationManager.notify(NOTIFICATION_ID, mNotifyBuilder.build());
     }
+
+
 }
