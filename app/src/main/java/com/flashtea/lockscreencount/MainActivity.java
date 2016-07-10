@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.RemoteViews;
 
 public class MainActivity extends AppCompatActivity{
@@ -32,6 +34,8 @@ public class MainActivity extends AppCompatActivity{
     private ShakeDetector mShakeDetector;
 
     Vibrator v;
+    SharedPreferences sharedPreferences;
+    CheckBox checkBox;
 
     BroadcastReceiver broadcastReceiverAdd = new BroadcastReceiver() {
         @Override
@@ -53,6 +57,15 @@ public class MainActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        checkBox = (CheckBox) findViewById(R.id.shakeCheckBox);
+        sharedPreferences = getApplicationContext().getSharedPreferences(
+                getString(R.string.preferencekey), Context.MODE_PRIVATE);
+        if(sharedPreferences.getBoolean("shake",false)){
+            checkBox.setChecked(true);
+        }else{
+            checkBox.setChecked(false);
+        }
 
         registerReceiver(broadcastReceiverAdd, new IntentFilter("ADD_COUNT"));
         registerReceiver(broadcastReceiverReset, new IntentFilter("RESET_COUNT"));
@@ -83,17 +96,35 @@ public class MainActivity extends AppCompatActivity{
 
             @Override
             public void onShake() {
-                if(notificationManager!= null) {
-                    if (notificationManager.getActiveNotifications().length > 0) {
-                        Log.w("flashtea.log", "Shake");
-                        count++;
-                        updateNotification();
+                if(sharedPreferences.getBoolean("shake",false)){
+                    if(notificationManager!= null) {
+                        if (notificationManager.getActiveNotifications().length > 0) {
+                            Log.w("flashtea.log", "Shake");
+                            count++;
+                            updateNotification();
 
-                        v.vibrate(300);
+                            v.vibrate(300);
+                        }
                     }
                 }
             }
         });
+    }
+
+    public void onCheckboxClicked(View view) {
+        // Is the view now checked?
+        boolean checked = ((CheckBox) view).isChecked();
+
+        // Check which checkbox was clicked
+        switch(view.getId()) {
+            case R.id.shakeCheckBox:
+                if (checked) {
+                    sharedPreferences.edit().putBoolean("shake",true).apply();
+                }else{
+                    sharedPreferences.edit().putBoolean("shake",false).apply();
+                }
+                break;
+        }
     }
 
     @Override

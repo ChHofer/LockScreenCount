@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Lock Screen Count</string>
+    <string name="preferencekey">flashtea.lockscreencounter</string>
 </resources>
