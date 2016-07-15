@@ -35,12 +35,26 @@
         android:text="\@flashtea"/>
 
     <CheckBox
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Shake Detection"
+    android:id="@+id/shakeCheckBox"
+    android:layout_centerVertical="true"
+    android:layout_centerHorizontal="true"
+    android:checked="false"
+    android:onClick="onCheckboxClicked"
+    android:layout_below="@+id/remove_notification_button"
+        android:layout_marginTop="20dp"/>
+
+    <CheckBox
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Shake Detection"
-        android:id="@+id/shakeCheckBox"
+        android:text="Vibrate on Action"
+        android:id="@+id/vibrateCheckBox"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
         android:checked="false"
-        android:onClick="onCheckboxClicked"/>
+        android:onClick="onCheckboxClicked"
+        android:layout_below="@+id/shakeCheckBox"
+        android:layout_marginTop="20dp"/>
 </RelativeLayout>

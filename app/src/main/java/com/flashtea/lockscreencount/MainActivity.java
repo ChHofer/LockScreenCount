@@ -35,12 +35,16 @@ public class MainActivity extends AppCompatActivity{
 
     Vibrator v;
     SharedPreferences sharedPreferences;
-    CheckBox checkBox;
+    CheckBox vibrateCheckBox, shakeCheckBox;
 
     BroadcastReceiver broadcastReceiverAdd = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            sharedPreferences = getApplicationContext().getSharedPreferences(
+                    getString(R.string.preferencekey), Context.MODE_PRIVATE);
+            count = sharedPreferences.getInt("count",0);
             count++;
+            sharedPreferences.edit().putInt("count",count).apply();
             updateNotification();
         }
     };
@@ -48,7 +52,9 @@ public class MainActivity extends AppCompatActivity{
     BroadcastReceiver broadcastReceiverReset = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            count=0;
+            sharedPreferences = getApplicationContext().getSharedPreferences(
+                    getString(R.string.preferencekey), Context.MODE_PRIVATE);
+            sharedPreferences.edit().putInt("count",0).apply();
             updateNotification();
         }
     };
@@ -58,13 +64,22 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        checkBox = (CheckBox) findViewById(R.id.shakeCheckBox);
+        shakeCheckBox = (CheckBox) findViewById(R.id.shakeCheckBox);
         sharedPreferences = getApplicationContext().getSharedPreferences(
                 getString(R.string.preferencekey), Context.MODE_PRIVATE);
         if(sharedPreferences.getBoolean("shake",false)){
-            checkBox.setChecked(true);
+            shakeCheckBox.setChecked(true);
         }else{
-            checkBox.setChecked(false);
+            shakeCheckBox.setChecked(false);
+        }
+
+        vibrateCheckBox = (CheckBox) findViewById(R.id.shakeCheckBox);
+        sharedPreferences = getApplicationContext().getSharedPreferences(
+                getString(R.string.preferencekey), Context.MODE_PRIVATE);
+        if(sharedPreferences.getBoolean("vibrate",false)){
+            vibrateCheckBox.setChecked(true);
+        }else{
+            vibrateCheckBox.setChecked(false);
         }
 
         registerReceiver(broadcastReceiverAdd, new IntentFilter("ADD_COUNT"));
@@ -100,10 +115,12 @@ public class MainActivity extends AppCompatActivity{
                     if(notificationManager!= null) {
                         if (notificationManager.getActiveNotifications().length > 0) {
                             Log.w("flashtea.log", "Shake");
+                            sharedPreferences = getApplicationContext().getSharedPreferences(
+                                    getString(R.string.preferencekey), Context.MODE_PRIVATE);
+                            count = sharedPreferences.getInt("count",0);
                             count++;
+                            sharedPreferences.edit().putInt("count",count).apply();
                             updateNotification();
-
-                            v.vibrate(300);
                         }
                     }
                 }
@@ -122,6 +139,13 @@ public class MainActivity extends AppCompatActivity{
                     sharedPreferences.edit().putBoolean("shake",true).apply();
                 }else{
                     sharedPreferences.edit().putBoolean("shake",false).apply();
+                }
+                break;
+            case R.id.vibrateCheckBox:
+                if (checked) {
+                    sharedPreferences.edit().putBoolean("vibrate",true).apply();
+                }else{
+                    sharedPreferences.edit().putBoolean("vibrate",false).apply();
                 }
                 break;
         }
@@ -143,6 +167,36 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void startNotification(){
+        updateNotification();
+    }
+
+    public void removeNotification(){
+        String ns = Context.NOTIFICATION_SERVICE;
+        notificationManager = (NotificationManager) getSystemService(ns);
+
+        notificationManager.cancelAll();
+        //notificationManager.cancel(NOTIFICATION_ID);
+    }
+
+    public static class addButtonListener extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            context.sendBroadcast(new Intent("ADD_COUNT"));
+        }
+    }
+
+    public static class resetButtonListener extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            context.sendBroadcast(new Intent("RESET_COUNT"));
+        }
+    }
+
+    public void updateNotification(){
+        sharedPreferences = getApplicationContext().getSharedPreferences(
+                getString(R.string.preferencekey), Context.MODE_PRIVATE);
+        count = sharedPreferences.getInt("count",0);
+
         String ns = Context.NOTIFICATION_SERVICE;
         notificationManager = (NotificationManager) getSystemService(ns);
 
@@ -181,35 +235,13 @@ public class MainActivity extends AppCompatActivity{
         notificationView.setOnClickPendingIntent(R.id.reset,
                 pendingResetIntent);
 
+        notificationView.setTextViewText(R.id.appName,String.valueOf(String.valueOf(count)));
+
         notificationManager.notify(NOTIFICATION_ID, mNotifyBuilder.build());
-    }
 
-    public void removeNotification(){
-        notificationManager.cancelAll();
-        //notificationManager.cancel(NOTIFICATION_ID);
-    }
-
-    public static class addButtonListener extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            context.sendBroadcast(new Intent("ADD_COUNT"));
+        if(sharedPreferences.getBoolean("vibrate",false)){
+            v.vibrate(100);
         }
-    }
-
-    public static class resetButtonListener extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            context.sendBroadcast(new Intent("RESET_COUNT"));
-        }
-    }
-
-    public void updateNotification(){
-        notificationView.setTextViewText(R.id.appName,String.valueOf(count));
-        mNotifyBuilder.setContent(notificationView);
-
-        // Because the ID remains unchanged, the existing notification is
-        // updated.
-        notificationManager.notify(NOTIFICATION_ID, mNotifyBuilder.build());
     }
 
 
