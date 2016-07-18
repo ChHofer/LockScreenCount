@@ -3,49 +3,60 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:gravity="center"
-    android:background="#828282" >
+    android:background="#212121" >
 
     <ImageView
         android:id="@+id/notifiation_image"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
+        android:scaleType="fitCenter"
         android:contentDescription=""
-        android:src="@mipmap/ic_launcher"
-        android:paddingStart="12dp"
-        android:layout_alignParentStart="true"/>
+        android:src="@drawable/noti_icon"
+        android:padding="10dp"
+        android:layout_alignParentStart="true"
+        android:adjustViewBounds="true"
+        android:background="#1d3741"/>
 
     <TextView
         android:id="@+id/appName"
         android:layout_toEndOf="@id/notifiation_image"
+        android:layout_toStartOf="@+id/add"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:text="0"
         android:gravity="center"
-        android:textSize="30sp"
-        android:textColor="#f5f5f5"
-        android:paddingStart="30dp"
+        android:textAlignment="center"
+        android:textSize="36sp"
+        android:textColor="#ffffff"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <ImageButton
-        android:id="@+id/add"
+        android:id="@id/add"
         android:layout_toStartOf="@+id/reset"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:src="@drawable/ic_plus_one_white_48dp"
-        android:background="#00000000"
+        android:src="@drawable/plus_one"
+        android:background="#181818"
         android:scaleType="fitCenter"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginRight="5dp"
+        android:padding="9dp"
+        android:adjustViewBounds="true"
         android:text="" />
+
     <ImageButton
         android:id="@id/reset"
         android:layout_alignParentEnd="true"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:src="@drawable/ic_settings_backup_restore_white_48dp"
-        android:background="#00000000"
+        android:src="@drawable/reset"
+        android:background="#181818"
         android:scaleType="fitCenter"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginRight="5dp"
+        android:padding="9dp"
+        android:adjustViewBounds="true"
         android:text="" />
 </RelativeLayout>

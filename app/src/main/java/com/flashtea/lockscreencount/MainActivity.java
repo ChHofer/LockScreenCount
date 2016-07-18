@@ -1,5 +1,6 @@
 package com.flashtea.lockscreencount;
 
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -12,14 +13,15 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v4.app.NotificationCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ImageButton;
 import android.widget.RemoteViews;
+import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends Activity {
 
     private final int NOTIFICATION_ID = 999;
     private NotificationManager notificationManager;
@@ -36,16 +38,13 @@ public class MainActivity extends AppCompatActivity{
     Vibrator v;
     SharedPreferences sharedPreferences;
     CheckBox vibrateCheckBox, shakeCheckBox;
+    ImageButton plusButton, resetButton;
+    TextView countText;
 
     BroadcastReceiver broadcastReceiverAdd = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            sharedPreferences = getApplicationContext().getSharedPreferences(
-                    getString(R.string.preferencekey), Context.MODE_PRIVATE);
-            count = sharedPreferences.getInt("count",0);
-            count++;
-            sharedPreferences.edit().putInt("count",count).apply();
-            updateNotification();
+            add();
         }
     };
 
@@ -64,6 +63,7 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        countText = (TextView) findViewById(R.id.countView);
         shakeCheckBox = (CheckBox) findViewById(R.id.shakeCheckBox);
         sharedPreferences = getApplicationContext().getSharedPreferences(
                 getString(R.string.preferencekey), Context.MODE_PRIVATE);
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity{
             shakeCheckBox.setChecked(false);
         }
 
-        vibrateCheckBox = (CheckBox) findViewById(R.id.shakeCheckBox);
+        vibrateCheckBox = (CheckBox) findViewById(R.id.vibrateCheckBox);
         sharedPreferences = getApplicationContext().getSharedPreferences(
                 getString(R.string.preferencekey), Context.MODE_PRIVATE);
         if(sharedPreferences.getBoolean("vibrate",false)){
@@ -112,20 +112,41 @@ public class MainActivity extends AppCompatActivity{
             @Override
             public void onShake() {
                 if(sharedPreferences.getBoolean("shake",false)){
-                    if(notificationManager!= null) {
-                        if (notificationManager.getActiveNotifications().length > 0) {
-                            Log.w("flashtea.log", "Shake");
-                            sharedPreferences = getApplicationContext().getSharedPreferences(
-                                    getString(R.string.preferencekey), Context.MODE_PRIVATE);
-                            count = sharedPreferences.getInt("count",0);
-                            count++;
-                            sharedPreferences.edit().putInt("count",count).apply();
-                            updateNotification();
-                        }
-                    }
+                            add();
                 }
             }
         });
+
+        plusButton = (ImageButton) findViewById(R.id.plusButton);
+        plusButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                add();
+            }
+        });
+
+        resetButton = (ImageButton) findViewById(R.id.resetButton);
+        resetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sharedPreferences = getApplicationContext().getSharedPreferences(
+                        getString(R.string.preferencekey), Context.MODE_PRIVATE);
+                sharedPreferences.edit().putInt("count",0).apply();
+                count = sharedPreferences.getInt("count",0);
+
+                countText.setText(String.valueOf(count));
+
+                String ns = Context.NOTIFICATION_SERVICE;
+                notificationManager = (NotificationManager) getSystemService(ns);
+
+                updateNotification();
+            }
+        });
+        count = sharedPreferences.getInt("count",0);
+
+        countText.setText(String.valueOf(count));
+
+        startNotification();
     }
 
     public void onCheckboxClicked(View view) {
@@ -157,6 +178,7 @@ public class MainActivity extends AppCompatActivity{
         unregisterReceiver(broadcastReceiverAdd);
         unregisterReceiver(broadcastReceiverReset);
         mSensorManager.unregisterListener(mShakeDetector);
+        Log.w("flashtea.log","onDestroy");
     }
 
     @Override
@@ -200,7 +222,6 @@ public class MainActivity extends AppCompatActivity{
         String ns = Context.NOTIFICATION_SERVICE;
         notificationManager = (NotificationManager) getSystemService(ns);
 
-
         notificationView = new RemoteViews(getPackageName(),
                 R.layout.activity_custom_notification);
 
@@ -214,8 +235,8 @@ public class MainActivity extends AppCompatActivity{
                 .setContentIntent(pendingNotificationIntent)
                 .setContentTitle("New Message")
                 .setContentText("You've received new messages.")
-                .setOngoing(true)
-                .setSmallIcon(R.mipmap.ic_launcher);
+                //.setOngoing(true)
+                .setSmallIcon(R.drawable.noti_icon);
 
 
         //Intent that is started when Add Button is clicked.
@@ -237,12 +258,32 @@ public class MainActivity extends AppCompatActivity{
 
         notificationView.setTextViewText(R.id.appName,String.valueOf(String.valueOf(count)));
 
+        countText.setText(String.valueOf(count));
+
         notificationManager.notify(NOTIFICATION_ID, mNotifyBuilder.build());
+
+
+    }
+
+    public void add(){
+        sharedPreferences = getApplicationContext().getSharedPreferences(
+                getString(R.string.preferencekey), Context.MODE_PRIVATE);
+        count = sharedPreferences.getInt("count",0);
+        count++;
+        sharedPreferences.edit().putInt("count",count).apply();
+
+        count = sharedPreferences.getInt("count",0);
+        countText.setText(String.valueOf(count));
+        String ns = Context.NOTIFICATION_SERVICE;
+        notificationManager = (NotificationManager) getSystemService(ns);
+
+        updateNotification();
 
         if(sharedPreferences.getBoolean("vibrate",false)){
             v.vibrate(100);
         }
     }
+
 
 
 }
